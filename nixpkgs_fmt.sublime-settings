@@ -4,17 +4,8 @@
 
   When modifying this setting, ensure that the executable expects to
   communicate over standard input/output.
-
-  For versions of `rustfmt` prior to 0.8.0, use:
-
-      "executable": ["rustfmt", "--write-mode", "display"]
-
-  To tell `rustfmt` to use the 2018 edition globally, use:
-
-      "executable": ["rustfmt", "--edition", "2018"]
-
   */
-  "executable": ["rustfmt"],
+  "executable": ["nixpkgs-fmt"],
 
   /*
   Additional environment variables for the subprocess. Environment is always
@@ -63,7 +54,7 @@
   "cwd_mode": "auto",
 
   /*
-  Show errors from `rustfmt` as popups. Enabled by default.
+  Show errors from `nixpkgs-fmt` as popups. Enabled by default.
   */
   "error_messages": true,
 
