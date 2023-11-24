@@ -1,0 +1,7 @@
+.DS_Store
+
+# Sublime project
+*.sublime-workspace
+
+# Python
+venv
