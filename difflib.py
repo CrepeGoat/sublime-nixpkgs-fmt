@@ -11,12 +11,14 @@ Edited for clarity and simplicity by Nelo Mitranim, 2017.
 import re
 from collections import namedtuple
 
-class Ops(object):
-    EQUAL  = 'EQUAL'
-    INSERT = 'INSERT'
-    DELETE = 'DELETE'
 
-Diff = namedtuple('Diff', ['op', 'text'])
+class Ops(object):
+    EQUAL = "EQUAL"
+    INSERT = "INSERT"
+    DELETE = "DELETE"
+
+
+Diff = namedtuple("Diff", ["op", "text"])
 
 # Cost of an empty edit operation in terms of edit characters.
 DIFF_EDIT_COST = 4
@@ -24,6 +26,7 @@ DIFF_EDIT_COST = 4
 BLANK_LINE_END = re.compile(r"\n\r?\n$")
 
 BLANK_LINE_START = re.compile(r"^\r?\n\r?\n")
+
 
 def myers_diffs(text1, text2, checklines=True):
     """Find the differences between two texts.  Simplifies the problem by
@@ -40,7 +43,7 @@ def myers_diffs(text1, text2, checklines=True):
         List of changes.
     """
     if text1 == None or text2 == None:
-        raise ValueError('Null inputs (myers_diffs)')
+        raise ValueError("Null inputs (myers_diffs)")
 
     # Check for equality (speedup).
     if text1 == text2:
@@ -57,7 +60,7 @@ def myers_diffs(text1, text2, checklines=True):
     # Trim off common suffix (speedup).
     common_length = common_suffix_length(text1, text2)
     if common_length == 0:
-        commonsuffix = ''
+        commonsuffix = ""
     else:
         commonsuffix = text1[-common_length:]
         text1 = text1[:-common_length]
@@ -73,6 +76,7 @@ def myers_diffs(text1, text2, checklines=True):
         diffs.append(Diff(Ops.EQUAL, commonsuffix))
     cleanup_merge(diffs)
     return diffs
+
 
 def compute_diffs(text1, text2, checklines):
     """Find the differences between two texts.  Assumes that the texts do not
@@ -103,8 +107,11 @@ def compute_diffs(text1, text2, checklines):
     i = longtext.find(shorttext)
     if i != -1:
         # Shorter text is inside the longer text (speedup).
-        diffs = [Diff(Ops.INSERT, longtext[:i]), Diff(Ops.EQUAL, shorttext),
-                         Diff(Ops.INSERT, longtext[i + len(shorttext):])]
+        diffs = [
+            Diff(Ops.INSERT, longtext[:i]),
+            Diff(Ops.EQUAL, shorttext),
+            Diff(Ops.INSERT, longtext[i + len(shorttext) :]),
+        ]
         # Swap insertions for deletions if diff is reversed.
         if len(text1) > len(text2):
             diffs[0] = diffs[0]._replace(op=Ops.DELETE)
@@ -120,6 +127,7 @@ def compute_diffs(text1, text2, checklines):
         return line_mode_diffs(text1, text2)
 
     return diff_bisect(text1, text2)
+
 
 def line_mode_diffs(text1, text2):
     """Do a quick line-level diff on both strings, then rediff the parts for
@@ -140,19 +148,22 @@ def line_mode_diffs(text1, text2):
     diffs = myers_diffs(text1, text2, False)
 
     # Convert the diff back to original text.
-    diffs = [diff._replace(text=''.join(line_list[ord(char)] for char in diff.text)) for diff in diffs]
+    diffs = [
+        diff._replace(text="".join(line_list[ord(char)] for char in diff.text))
+        for diff in diffs
+    ]
 
     # Eliminate freak matches (e.g. blank lines)
     cleanup_semantic(diffs)
 
     # Rediff any replacement blocks, this time character-by-character.
     # Add a dummy entry at the end.
-    diffs.append(Diff(Ops.EQUAL, ''))
+    diffs.append(Diff(Ops.EQUAL, ""))
     pointer = 0
     count_delete = 0
     count_insert = 0
-    text_delete = ''
-    text_insert = ''
+    text_delete = ""
+    text_insert = ""
     while pointer < len(diffs):
         if diffs[pointer].op == Ops.INSERT:
             count_insert += 1
@@ -169,14 +180,15 @@ def line_mode_diffs(text1, text2):
                 pointer = pointer - count_delete - count_insert + len(a)
             count_insert = 0
             count_delete = 0
-            text_delete = ''
-            text_insert = ''
+            text_delete = ""
+            text_insert = ""
 
         pointer += 1
 
     diffs.pop()  # Remove the dummy entry at the end.
 
     return diffs
+
 
 def diff_bisect(text1, text2):
     """Find the 'middle snake' of a diff, split the problem in two
@@ -203,7 +215,7 @@ def diff_bisect(text1, text2):
     delta = text1_length - text2_length
     # If the total number of characters is odd, then the front path will
     # collide with the reverse path.
-    front = (delta % 2 != 0)
+    front = delta % 2 != 0
     # Offsets for start and end of k loop.
     # Prevents mapping of space beyond the grid.
     k1start = 0
@@ -214,14 +226,12 @@ def diff_bisect(text1, text2):
         # Walk the front path one step.
         for k1 in range(-d + k1start, d + 1 - k1end, 2):
             k1_offset = v_offset + k1
-            if k1 == -d or (k1 != d and
-                    v1[k1_offset - 1] < v1[k1_offset + 1]):
+            if k1 == -d or (k1 != d and v1[k1_offset - 1] < v1[k1_offset + 1]):
                 x1 = v1[k1_offset + 1]
             else:
                 x1 = v1[k1_offset - 1] + 1
             y1 = x1 - k1
-            while (x1 < text1_length and y1 < text2_length and
-                         text1[x1] == text2[y1]):
+            while x1 < text1_length and y1 < text2_length and text1[x1] == text2[y1]:
                 x1 += 1
                 y1 += 1
             v1[k1_offset] = x1
@@ -243,14 +253,16 @@ def diff_bisect(text1, text2):
         # Walk the reverse path one step.
         for k2 in range(-d + k2start, d + 1 - k2end, 2):
             k2_offset = v_offset + k2
-            if k2 == -d or (k2 != d and
-                    v2[k2_offset - 1] < v2[k2_offset + 1]):
+            if k2 == -d or (k2 != d and v2[k2_offset - 1] < v2[k2_offset + 1]):
                 x2 = v2[k2_offset + 1]
             else:
                 x2 = v2[k2_offset - 1] + 1
             y2 = x2 - k2
-            while (x2 < text1_length and y2 < text2_length and
-                         text1[-x2 - 1] == text2[-y2 - 1]):
+            while (
+                x2 < text1_length
+                and y2 < text2_length
+                and text1[-x2 - 1] == text2[-y2 - 1]
+            ):
                 x2 += 1
                 y2 += 1
             v2[k2_offset] = x2
@@ -273,6 +285,7 @@ def diff_bisect(text1, text2):
 
     # Number of diffs equals number of characters, no commonality at all.
     return [Diff(Ops.DELETE, text1), Diff(Ops.INSERT, text2)]
+
 
 def bisect_split_diffs(text1, text2, x, y):
     """Given the location of the 'middle snake', split the diff in two parts
@@ -298,6 +311,7 @@ def bisect_split_diffs(text1, text2, x, y):
 
     return diffs + diffsb
 
+
 def lines_to_chars(text1, text2):
     """Split two texts into a list of strings.  Reduce the texts to a string
     of dicts where each Unicode character represents one line.
@@ -311,12 +325,12 @@ def lines_to_chars(text1, text2):
         the list of unique strings.  The zeroth element of the list of unique
         strings is intentionally blank.
     """
-    line_list = []   # e.g. line_list[4] == "Hello\n"
-    line_dict = {}   # e.g. line_dict["Hello\n"] == 4
+    line_list = []  # e.g. line_list[4] == "Hello\n"
+    line_dict = {}  # e.g. line_dict["Hello\n"] == 4
 
     # "\x00" is a valid character, but various debuggers don't like it.
     # So we'll insert a junk entry to avoid generating a null character.
-    line_list.append('')
+    line_list.append("")
 
     def lines_to_chars_munge(text):
         """Split a text into a list of strings.  Reduce the texts to a string
@@ -336,10 +350,10 @@ def lines_to_chars(text1, text2):
         line_start = 0
         line_end = -1
         while line_end < len(text) - 1:
-            line_end = text.find('\n', line_start)
+            line_end = text.find("\n", line_start)
             if line_end == -1:
                 line_end = len(text) - 1
-            line = text[line_start:line_end + 1]
+            line = text[line_start : line_end + 1]
             line_start = line_end + 1
 
             if line in line_dict:
@@ -348,11 +362,12 @@ def lines_to_chars(text1, text2):
                 line_list.append(line)
                 line_dict[line] = len(line_list) - 1
                 chars.append(chr(len(line_list) - 1))
-        return ''.join(chars)
+        return "".join(chars)
 
     chars1 = lines_to_chars_munge(text1)
     chars2 = lines_to_chars_munge(text2)
     return (chars1, chars2, line_list)
+
 
 def common_prefix_length(text1, text2):
     """Determine the common prefix of two strings.
@@ -382,6 +397,7 @@ def common_prefix_length(text1, text2):
         pointermid = (pointermax - pointermin) // 2 + pointermin
     return pointermid
 
+
 def common_suffix_length(text1, text2):
     """Determine the common suffix of two strings.
 
@@ -402,14 +418,17 @@ def common_suffix_length(text1, text2):
     pointermid = pointermax
     pointerend = 0
     while pointermin < pointermid:
-        if (text1[-pointermid:len(text1) - pointerend] ==
-                text2[-pointermid:len(text2) - pointerend]):
+        if (
+            text1[-pointermid : len(text1) - pointerend]
+            == text2[-pointermid : len(text2) - pointerend]
+        ):
             pointermin = pointermid
             pointerend = pointermin
         else:
             pointermax = pointermid
         pointermid = (pointermax - pointermin) // 2 + pointermin
     return pointermid
+
 
 def common_overlap(text1, text2):
     """Determine if the suffix of one string is the prefix of another.
@@ -453,6 +472,7 @@ def common_overlap(text1, text2):
             best = length
             length += 1
 
+
 def cleanup_semantic(diffs):
     """Reduce the number of edits by eliminating semantically trivial
     equalities.
@@ -481,13 +501,17 @@ def cleanup_semantic(diffs):
                 length_deletions2 += len(diffs[pointer].text)
             # Eliminate an equality that is smaller or equal to the edits on both
             # sides of it.
-            if (lastequality and (len(lastequality) <=
-                    max(length_insertions1, length_deletions1)) and
-                    (len(lastequality) <= max(length_insertions2, length_deletions2))):
+            if (
+                lastequality
+                and (len(lastequality) <= max(length_insertions1, length_deletions1))
+                and (len(lastequality) <= max(length_insertions2, length_deletions2))
+            ):
                 # Duplicate record.
                 diffs.insert(equalities[-1], Diff(Ops.DELETE, lastequality))
                 # Change second copy to insert.
-                diffs[equalities[-1] + 1] = diffs[equalities[-1] + 1]._replace(op=Ops.INSERT)
+                diffs[equalities[-1] + 1] = diffs[equalities[-1] + 1]._replace(
+                    op=Ops.INSERT
+                )
                 # Throw away the equality we just deleted.
                 equalities.pop()
                 # Throw away the previous equality (it needs to be reevaluated).
@@ -517,31 +541,39 @@ def cleanup_semantic(diffs):
     # Only extract an overlap if it is as big as the edit ahead or behind it.
     pointer = 1
     while pointer < len(diffs):
-        if (diffs[pointer - 1].op == Ops.DELETE and
-                diffs[pointer].op == Ops.INSERT):
+        if diffs[pointer - 1].op == Ops.DELETE and diffs[pointer].op == Ops.INSERT:
             deletion = diffs[pointer - 1].text
             insertion = diffs[pointer].text
             overlap_length1 = common_overlap(deletion, insertion)
             overlap_length2 = common_overlap(insertion, deletion)
             if overlap_length1 >= overlap_length2:
-                if (overlap_length1 >= len(deletion) / 2.0 or
-                        overlap_length1 >= len(insertion) / 2.0):
+                if (
+                    overlap_length1 >= len(deletion) / 2.0
+                    or overlap_length1 >= len(insertion) / 2.0
+                ):
                     # Overlap found.  Insert an equality and trim the surrounding edits.
                     diffs.insert(pointer, Diff(Ops.EQUAL, insertion[:overlap_length1]))
-                    diffs[pointer - 1] = Diff(Ops.DELETE, deletion[:len(deletion) - overlap_length1])
+                    diffs[pointer - 1] = Diff(
+                        Ops.DELETE, deletion[: len(deletion) - overlap_length1]
+                    )
                     diffs[pointer + 1] = Diff(Ops.INSERT, insertion[overlap_length1:])
                     pointer += 1
             else:
-                if (overlap_length2 >= len(deletion) / 2.0 or
-                        overlap_length2 >= len(insertion) / 2.0):
+                if (
+                    overlap_length2 >= len(deletion) / 2.0
+                    or overlap_length2 >= len(insertion) / 2.0
+                ):
                     # Reverse overlap found.
                     # Insert an equality and swap and trim the surrounding edits.
                     diffs.insert(pointer, Diff(Ops.EQUAL, deletion[:overlap_length2]))
-                    diffs[pointer - 1] = Diff(Ops.INSERT, insertion[:len(insertion) - overlap_length2])
+                    diffs[pointer - 1] = Diff(
+                        Ops.INSERT, insertion[: len(insertion) - overlap_length2]
+                    )
                     diffs[pointer + 1] = Diff(Ops.DELETE, deletion[overlap_length2:])
                     pointer += 1
             pointer += 1
         pointer += 1
+
 
 def cleanup_semantic_lossless(diffs):
     """Look for single edits surrounded on both sides by equalities
@@ -605,8 +637,7 @@ def cleanup_semantic_lossless(diffs):
     pointer = 1
     # Intentionally ignore the first and last element (don't need checking).
     while pointer < len(diffs) - 1:
-        if (diffs[pointer - 1].op == Ops.EQUAL and
-                diffs[pointer + 1].op == Ops.EQUAL):
+        if diffs[pointer - 1].op == Ops.EQUAL and diffs[pointer + 1].op == Ops.EQUAL:
             # This is a single edit surrounded by equalities.
             equality1 = diffs[pointer - 1].text
             edit = diffs[pointer].text
@@ -624,12 +655,16 @@ def cleanup_semantic_lossless(diffs):
             best_equality_1 = equality1
             best_edit = edit
             best_equality_2 = equality2
-            best_score = (cleanup_semantic_score(equality1, edit) + cleanup_semantic_score(edit, equality2))
+            best_score = cleanup_semantic_score(
+                equality1, edit
+            ) + cleanup_semantic_score(edit, equality2)
             while edit and equality2 and edit[0] == equality2[0]:
                 equality1 += edit[0]
                 edit = edit[1:] + equality2[0]
                 equality2 = equality2[1:]
-                score = (cleanup_semantic_score(equality1, edit) + cleanup_semantic_score(edit, equality2))
+                score = cleanup_semantic_score(
+                    equality1, edit
+                ) + cleanup_semantic_score(edit, equality2)
                 # The >= encourages trailing rather than leading whitespace on edits.
                 if score >= best_score:
                     best_score = score
@@ -640,17 +675,22 @@ def cleanup_semantic_lossless(diffs):
             if diffs[pointer - 1].text != best_equality_1:
                 # We have an improvement, save it back to the diff.
                 if best_equality_1:
-                    diffs[pointer - 1] = diffs[pointer - 1]._replace(text=best_equality_1)
+                    diffs[pointer - 1] = diffs[pointer - 1]._replace(
+                        text=best_equality_1
+                    )
                 else:
                     del diffs[pointer - 1]
                     pointer -= 1
                 diffs[pointer] = diffs[pointer]._replace(text=best_edit)
                 if best_equality_2:
-                    diffs[pointer + 1] = diffs[pointer + 1]._replace(text=best_equality_2)
+                    diffs[pointer + 1] = diffs[pointer + 1]._replace(
+                        text=best_equality_2
+                    )
                 else:
                     del diffs[pointer + 1]
                     pointer -= 1
         pointer += 1
+
 
 def cleanup_efficiency(diffs):
     """Reduce the number of edits by eliminating operationally trivial
@@ -669,8 +709,7 @@ def cleanup_efficiency(diffs):
     post_del = False  # Is there a deletion operation after the last equality.
     while pointer < len(diffs):
         if diffs[pointer].op == Ops.EQUAL:  # Equality found.
-            if (len(diffs[pointer].text) < DIFF_EDIT_COST and
-                    (post_ins or post_del)):
+            if len(diffs[pointer].text) < DIFF_EDIT_COST and (post_ins or post_del):
                 # Candidate found.
                 equalities.append(pointer)
                 pre_ins = post_ins
@@ -695,13 +734,19 @@ def cleanup_efficiency(diffs):
             # <ins>A</del>X<ins>C</ins><del>D</del>
             # <ins>A</ins><del>B</del>X<del>C</del>
 
-            if lastequality and ((pre_ins and pre_del and post_ins and post_del) or
-                                                     ((len(lastequality) < DIFF_EDIT_COST / 2) and
-                                                        (pre_ins + pre_del + post_ins + post_del) == 3)):
+            if lastequality and (
+                (pre_ins and pre_del and post_ins and post_del)
+                or (
+                    (len(lastequality) < DIFF_EDIT_COST / 2)
+                    and (pre_ins + pre_del + post_ins + post_del) == 3
+                )
+            ):
                 # Duplicate record.
                 diffs.insert(equalities[-1], Diff(Ops.DELETE, lastequality))
                 # Change second copy to insert.
-                diffs[equalities[-1] + 1] = Diff(Ops.INSERT, diffs[equalities[-1] + 1].text)
+                diffs[equalities[-1] + 1] = Diff(
+                    Ops.INSERT, diffs[equalities[-1] + 1].text
+                )
                 equalities.pop()  # Throw away the equality we just deleted.
                 lastequality = None
                 if pre_ins and pre_del:
@@ -722,6 +767,7 @@ def cleanup_efficiency(diffs):
     if changes:
         cleanup_merge(diffs)
 
+
 def cleanup_merge(diffs):
     """Reorder and merge like edit sections.  Merge equalities.
     Any edit section can move as long as it doesn't cross an equality.
@@ -729,12 +775,12 @@ def cleanup_merge(diffs):
     Args:
         diffs: List of diff tuples.
     """
-    diffs.append(Diff(Ops.EQUAL, ''))  # Add a dummy entry at the end.
+    diffs.append(Diff(Ops.EQUAL, ""))  # Add a dummy entry at the end.
     pointer = 0
     count_delete = 0
     count_insert = 0
-    text_delete = ''
-    text_insert = ''
+    text_delete = ""
+    text_insert = ""
     while pointer < len(diffs):
         if diffs[pointer].op == Ops.INSERT:
             count_insert += 1
@@ -753,29 +799,38 @@ def cleanup_merge(diffs):
                     if common_length != 0:
                         x = pointer - count_delete - count_insert - 1
                         if x >= 0 and diffs[x].op == Ops.EQUAL:
-                            diffs[x] = diffs[x]._replace(text=(diffs[x].text + text_insert[:common_length]))
+                            diffs[x] = diffs[x]._replace(
+                                text=(diffs[x].text + text_insert[:common_length])
+                            )
                         else:
-                            diffs.insert(0, Diff(Ops.EQUAL, text_insert[:common_length]))
+                            diffs.insert(
+                                0, Diff(Ops.EQUAL, text_insert[:common_length])
+                            )
                             pointer += 1
                         text_insert = text_insert[common_length:]
                         text_delete = text_delete[common_length:]
                     # Factor out any common suffixies.
                     common_length = common_suffix_length(text_insert, text_delete)
                     if common_length != 0:
-                        diffs[pointer] = diffs[pointer]._replace(text=(
-                            text_insert[-common_length:] + diffs[pointer].text
-                        ))
+                        diffs[pointer] = diffs[pointer]._replace(
+                            text=(text_insert[-common_length:] + diffs[pointer].text)
+                        )
                         text_insert = text_insert[:-common_length]
                         text_delete = text_delete[:-common_length]
                 # Delete the offending records and add the merged ones.
                 if count_delete == 0:
-                    diffs[pointer - count_insert : pointer] = [Diff(Ops.INSERT, text_insert)]
+                    diffs[pointer - count_insert : pointer] = [
+                        Diff(Ops.INSERT, text_insert)
+                    ]
                 elif count_insert == 0:
-                    diffs[pointer - count_delete : pointer] = [Diff(Ops.DELETE, text_delete)]
+                    diffs[pointer - count_delete : pointer] = [
+                        Diff(Ops.DELETE, text_delete)
+                    ]
                 else:
                     diffs[pointer - count_delete - count_insert : pointer] = [
-                            Diff(Ops.DELETE, text_delete),
-                            Diff(Ops.INSERT, text_insert)]
+                        Diff(Ops.DELETE, text_delete),
+                        Diff(Ops.INSERT, text_insert),
+                    ]
                 pointer = pointer - count_delete - count_insert + 1
                 if count_delete != 0:
                     pointer += 1
@@ -783,19 +838,19 @@ def cleanup_merge(diffs):
                     pointer += 1
             elif pointer != 0 and diffs[pointer - 1].op == Ops.EQUAL:
                 # Merge this equality with the previous one.
-                diffs[pointer - 1] = diffs[pointer - 1]._replace(text=(
-                    diffs[pointer - 1].text + diffs[pointer].text
-                ))
+                diffs[pointer - 1] = diffs[pointer - 1]._replace(
+                    text=(diffs[pointer - 1].text + diffs[pointer].text)
+                )
                 del diffs[pointer]
             else:
                 pointer += 1
 
             count_insert = 0
             count_delete = 0
-            text_delete = ''
-            text_insert = ''
+            text_delete = ""
+            text_insert = ""
 
-    if diffs[-1].text == '':
+    if diffs[-1].text == "":
         diffs.pop()  # Remove the dummy entry at the end.
 
     # Second pass: look for single edits surrounded on both sides by equalities
@@ -805,27 +860,32 @@ def cleanup_merge(diffs):
     pointer = 1
     # Intentionally ignore the first and last element (don't need checking).
     while pointer < len(diffs) - 1:
-        if (diffs[pointer - 1].op == Ops.EQUAL and
-                diffs[pointer + 1].op == Ops.EQUAL):
+        if diffs[pointer - 1].op == Ops.EQUAL and diffs[pointer + 1].op == Ops.EQUAL:
             # This is a single edit surrounded by equalities.
             if diffs[pointer].text.endswith(diffs[pointer - 1].text):
                 # Shift the edit over the previous equality.
-                diffs[pointer] = diffs[pointer]._replace(text=(
-                    diffs[pointer - 1].text + diffs[pointer].text[:-len(diffs[pointer - 1].text)]
-                ))
-                diffs[pointer + 1] = diffs[pointer + 1]._replace(text=(
-                    diffs[pointer - 1].text + diffs[pointer + 1].text
-                ))
+                diffs[pointer] = diffs[pointer]._replace(
+                    text=(
+                        diffs[pointer - 1].text
+                        + diffs[pointer].text[: -len(diffs[pointer - 1].text)]
+                    )
+                )
+                diffs[pointer + 1] = diffs[pointer + 1]._replace(
+                    text=(diffs[pointer - 1].text + diffs[pointer + 1].text)
+                )
                 del diffs[pointer - 1]
                 changes = True
             elif diffs[pointer].text.startswith(diffs[pointer + 1].text):
                 # Shift the edit over the next equality.
-                diffs[pointer - 1] = diffs[pointer - 1]._replace(text=(
-                    diffs[pointer - 1].text + diffs[pointer + 1].text
-                ))
-                diffs[pointer] = diffs[pointer]._replace(text=(
-                    diffs[pointer].text[len(diffs[pointer + 1].text):] + diffs[pointer + 1].text
-                ))
+                diffs[pointer - 1] = diffs[pointer - 1]._replace(
+                    text=(diffs[pointer - 1].text + diffs[pointer + 1].text)
+                )
+                diffs[pointer] = diffs[pointer]._replace(
+                    text=(
+                        diffs[pointer].text[len(diffs[pointer + 1].text) :]
+                        + diffs[pointer + 1].text
+                    )
+                )
                 del diffs[pointer + 1]
                 changes = True
         pointer += 1
