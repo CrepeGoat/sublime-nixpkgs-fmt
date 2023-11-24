@@ -23,20 +23,6 @@
   "format_on_save": true,
 
   /*
-  Compatibility mode for versions of `rustfmt` prior to 0.8.0. Equivalent to:
-
-      "executable": ["rustfmt", "--write-mode", "display"]
-  */
-  "legacy_write_mode_option": false,
-
-  /*
-  Whether to search for `rustfmt.toml` in the file's directory and its
-  ancestors. For anonymous buffers, "current directory" will be guessed from
-  the current window.
-  */
-  "use_config_path": true,
-
-  /*
   Determines the CWD of the subprocess. Possible values:
 
     - "auto"         -- try to use the current file's directory; fall back on

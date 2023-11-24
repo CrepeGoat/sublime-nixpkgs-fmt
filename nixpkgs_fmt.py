@@ -40,37 +40,6 @@ def process_startup_info():
     return startupinfo
 
 
-def walk_to_root(path):
-    if path is None:
-        return
-
-    if os.path.isdir(path):
-        yield path
-
-    while not os.path.samefile(path, os.path.dirname(path)):
-        path = os.path.dirname(path)
-        yield path
-
-
-def config_for_dir(dir):
-    path = os.path.join(dir, 'rustfmt.toml')
-    if os.path.exists(path) and os.path.isfile(path):
-        return path
-
-    hidden_path = os.path.join(dir, '.rustfmt.toml')
-    if os.path.exists(hidden_path) and os.path.isfile(hidden_path):
-        return hidden_path
-
-    return None
-
-
-def find_config_path(path):
-    for dir in walk_to_root(path):
-        config = config_for_dir(dir)
-        if config:
-            return config
-
-
 def guess_cwd(view):
     mode = get_setting(view, 'cwd_mode')
 
@@ -116,18 +85,6 @@ def merge_into_view(view, edit, new_src):
 def run_format(view, input, encoding):
     exec = get_setting(view, 'executable')
     args = exec if isinstance(exec, list) else [exec]
-
-    if get_setting(view, 'legacy_write_mode_option'):
-        args += ['--write-mode', 'display']
-
-    if get_setting(view, 'use_config_path'):
-        path = view.file_name() or (
-            len(view.window().folders()) and view.window().folders()[0] or None
-        )
-
-        config = path and find_config_path(path)
-        if config:
-            args += ['--config-path', config]
 
     proc = sub.Popen(
         args=args,
