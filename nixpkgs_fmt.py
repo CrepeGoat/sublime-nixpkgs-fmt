@@ -23,8 +23,6 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
             check=True,
             # shell=True,
         )
-        if fmt_result.returncode != 0:
-            raise RuntimeError(f"format command {fmt_command} failed")
 
         self.view.replace(
             edit,
