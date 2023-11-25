@@ -29,3 +29,9 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
             full_region,
             fmt_result.stdout,
         )
+
+    def is_enabled(self):
+        syntax_lower = self.view.settings().get("syntax").lower()
+        return syntax_lower.endswith("nix.tmlanguage") or syntax_lower.endswith(
+            "nix.sublime-syntax"
+        )
