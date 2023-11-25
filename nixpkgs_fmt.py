@@ -14,6 +14,8 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
 
         full_region = sublime.Region(0, self.view.size())
         original_text = self.view.substr(full_region)
+        if len(original_text) == 0:
+            return
 
         fmt_result = subprocess.run(
             fmt_command,
@@ -23,6 +25,8 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
             check=True,
             # shell=True,
         )
+        if fmt_result.stdout == original_text:
+            return
 
         self.view.replace(
             edit,
