@@ -1,0 +1,6 @@
+[
+  {
+    "caption": "nixpkgs-fmt: Format Buffer",
+    "command": "NixpkgsFmtCommand"
+  }
+]
