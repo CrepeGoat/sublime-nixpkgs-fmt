@@ -1,0 +1,9 @@
+{
+  /*
+  Executable with zero or more arguments.
+
+  When modifying this setting, ensure that the executable expects to
+  communicate over standard input/output.
+  */
+  "fmt_command": ["nixpkgs-fmt"],
+}
