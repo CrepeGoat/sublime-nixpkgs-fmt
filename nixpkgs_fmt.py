@@ -8,6 +8,7 @@ package_name = "nixpkgs-fmt"
 
 class NixpkgsFmtCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        print(f"[{package_name}] begin formatting")
         # encoding = self.view.encoding()
         package_settings = sublime.load_settings(package_name + ".sublime-settings")
         fmt_command: list = package_settings.get("fmt_command")
@@ -15,8 +16,10 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
         full_region = sublime.Region(0, self.view.size())
         original_text = self.view.substr(full_region)
         if len(original_text) == 0:
+            print(f"[{package_name}] content blank -> don't run formatter")
             return
 
+        print(f"[{package_name}] running format command {fmt_command}...")
         fmt_result = subprocess.run(
             fmt_command,
             input=original_text,
@@ -26,6 +29,7 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
             # shell=True,
         )
         if fmt_result.stdout == original_text:
+            print(f"[{package_name}] content already formatted -> don't update content")
             return
 
         self.view.replace(
