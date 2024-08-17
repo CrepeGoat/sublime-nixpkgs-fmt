@@ -1,0 +1,5 @@
+{
+  "fmt_command": ["nixfmt"],
+
+  "trigger_on_save": true,
+}

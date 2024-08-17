@@ -1,5 +1,0 @@
-{
-  "fmt_command": ["nixpkgs-fmt"],
-
-  "trigger_on_save": true,
-}

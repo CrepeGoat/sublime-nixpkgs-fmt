@@ -3,10 +3,10 @@ import sublime_plugin
 
 import subprocess
 
-package_name = "nixpkgs-fmt"
+package_name = "nixfmt"
 
 
-class NixpkgsFmtCommand(sublime_plugin.TextCommand):
+class NixFmtCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         print(f"[{package_name}] begin formatting")
         # encoding = self.view.encoding()
@@ -45,7 +45,7 @@ class NixpkgsFmtCommand(sublime_plugin.TextCommand):
         )
 
 
-class NixpkgsFmtOnSaveEventListener(sublime_plugin.ViewEventListener):
+class NixFmtOnSaveEventListener(sublime_plugin.ViewEventListener):
     def is_applicable(settings):
         syntax_lower = settings.get("syntax").lower()
         is_applicable_syntax = syntax_lower.endswith(
@@ -59,4 +59,4 @@ class NixpkgsFmtOnSaveEventListener(sublime_plugin.ViewEventListener):
         return True
 
     def on_pre_save(self):
-        self.view.run_command("nixpkgs_fmt")
+        self.view.run_command("nixfmt")

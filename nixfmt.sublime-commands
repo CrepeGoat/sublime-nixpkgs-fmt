@@ -1,0 +1,6 @@
+[
+  {
+    "caption": "nixfmt: Format Buffer",
+    "command": "nixfmt"
+  }
+]
